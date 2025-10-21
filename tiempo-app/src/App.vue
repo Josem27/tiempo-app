@@ -1,12 +1,19 @@
 <template>
   <div class="app" :style="backgroundStyle">
-    <div class="weather-card" v-if="weather">
-      <h1>{{ weather.name }}</h1>
-      <h2>{{ Math.round(weather.main.temp) }}°C</h2>
-      <p>{{ weather.weather[0].description }}</p>
-    </div>
-    <div v-else class="loading">
-      <p>Cargando clima...</p>
+    <div class="weather-card">
+      <input
+        v-model="city"
+        @keyup.enter="getWeather"
+        placeholder="Escribe una ciudad..."
+        class="city-input"
+      />
+      <div v-if="loading" class="loading">Cargando clima...</div>
+      <div v-else-if="weather">
+        <h1>{{ weather.name }}</h1>
+        <h2>{{ Math.round(weather.main.temp) }}°C</h2>
+        <p>{{ weather.weather[0].description }}</p>
+      </div>
+      <div v-else class="loading">Introduce una ciudad y presiona Enter</div>
     </div>
   </div>
 </template>
@@ -14,23 +21,37 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
+const city = ref('')
 const weather = ref(null)
+const loading = ref(false)
 
-const fetchWeather = async () => {
-  const lat = 40.4168
-  const lon = -3.7038
-  const apiKey = import.meta.env.VITE_WEATHER_API_KEY
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=es`
-  const res = await fetch(url)
-  weather.value = await res.json()
+const apiKey = import.meta.env.VITE_WEATHER_API_KEY
+
+const getWeather = async () => {
+  if (!city.value) return
+  loading.value = true
+  try {
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
+      city.value,
+    )}&appid=${apiKey}&units=metric&lang=es`
+    const res = await fetch(url)
+    const data = await res.json()
+    if (data.cod === 200) {
+      weather.value = data
+    } else {
+      alert(data.message)
+    }
+  } catch (err) {
+    console.error(err)
+    alert('Error al obtener el clima')
+  } finally {
+    loading.value = false
+  }
 }
 
-onMounted(() => {
-  fetchWeather()
-})
-
+// Fondo dinámico según clima
 const backgroundStyle = computed(() => {
-  if (!weather.value) return {}
+  if (!weather.value) return { background: 'linear-gradient(135deg, #89f7fe, #66a6ff)' }
   const main = weather.value.weather[0].main
   if (main.includes('Cloud')) return { background: 'linear-gradient(135deg, #757f9a, #d7dde8)' }
   if (main.includes('Rain')) return { background: 'linear-gradient(135deg, #667db6, #0082c8)' }
@@ -41,6 +62,11 @@ const backgroundStyle = computed(() => {
 </script>
 
 <style>
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+
 .app {
   height: 100vh;
   display: flex;
@@ -48,6 +74,7 @@ const backgroundStyle = computed(() => {
   align-items: center;
   transition: background 0.5s ease;
 }
+
 .weather-card {
   background: rgba(255, 255, 255, 0.15);
   padding: 2rem 3rem;
@@ -55,9 +82,25 @@ const backgroundStyle = computed(() => {
   backdrop-filter: blur(10px);
   text-align: center;
   color: #fff;
+  min-width: 280px;
 }
+
+.city-input {
+  width: 80%;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  border: none;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.city-input:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+}
+
 .loading {
-  color: #fff;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 </style>
