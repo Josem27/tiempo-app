@@ -1,24 +1,42 @@
 <template>
   <div class="app" :style="backgroundStyle">
-    <div class="weather-card">
-      <input
-        v-model="city"
-        @keyup.enter="getWeather"
-        placeholder="Escribe una ciudad..."
-        class="city-input"
-      />
-      <div v-if="loading" class="loading">Cargando clima...</div>
-      <div v-else-if="weather">
-        <img
-          :src="`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`"
-          alt="icono clima"
-          class="weather-icon"
+    <div class="weather-container">
+      <!-- Tarjeta principal -->
+      <div class="weather-card">
+        <input
+          v-model="city"
+          @keyup.enter="getWeather"
+          placeholder="Escribe una ciudad..."
+          class="city-input"
         />
-        <h1>{{ weather.name }}, {{ weather.sys.country }}</h1>
-        <h2>{{ Math.round(weather.main.temp) }}°C</h2>
-        <p>{{ capitalize(weather.weather[0].description) }}</p>
+        <div v-if="loading" class="loading">Cargando clima...</div>
+        <div v-else-if="weather">
+          <img
+            :src="`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`"
+            alt="icono clima"
+            class="weather-icon"
+          />
+          <h1>{{ weather.name }}, {{ weather.sys.country }}</h1>
+          <h2>{{ Math.round(weather.main.temp) }}°C</h2>
+          <p>{{ capitalize(weather.weather[0].description) }}</p>
+        </div>
+        <div v-else class="loading">Introduce una ciudad y presiona Enter</div>
       </div>
-      <div v-else class="loading">Introduce una ciudad y presiona Enter</div>
+
+      <!-- Pronóstico de 3 días con transición -->
+      <transition-group name="forecast" tag="div" class="forecast" v-if="forecast3.length">
+        <div
+          class="forecast-card"
+          v-for="(day, i) in forecast3"
+          :key="day.dt"
+          :style="{ transitionDelay: i * 0.1 + 's' }"
+        >
+          <p>{{ day.date }}</p>
+          <img :src="`https://openweathermap.org/img/wn/${day.icon}@2x.png`" alt="icono clima" />
+          <p>{{ Math.round(day.temp) }}°C</p>
+          <p>{{ capitalize(day.description) }}</p>
+        </div>
+      </transition-group>
     </div>
   </div>
 </template>
@@ -29,9 +47,13 @@ import { ref, computed } from 'vue'
 const city = ref('')
 const weather = ref(null)
 const loading = ref(false)
+const forecast3 = ref([])
 
 const apiKey = import.meta.env.VITE_WEATHER_API_KEY
 
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
+
+// Fetch clima principal
 const getWeather = async () => {
   if (!city.value) return
   loading.value = true
@@ -43,6 +65,7 @@ const getWeather = async () => {
     const data = await res.json()
     if (data.cod === 200) {
       weather.value = data
+      await getForecast(city.value)
     } else {
       alert(data.message)
     }
@@ -54,8 +77,38 @@ const getWeather = async () => {
   }
 }
 
-// Función para capitalizar la primera letra de la descripción
-const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
+// Fetch pronóstico 3 días
+const getForecast = async (cityName) => {
+  try {
+    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(
+      cityName,
+    )}&appid=${apiKey}&units=metric&lang=es`
+    const res = await fetch(url)
+    const data = await res.json()
+    if (data.cod === '200') {
+      const days = []
+      const today = new Date().getDate()
+      const dates = []
+      data.list.forEach((item) => {
+        const d = new Date(item.dt_txt)
+        const dayNum = d.getDate()
+        if (!dates.includes(dayNum) && d.getHours() === 12 && dayNum !== today) {
+          dates.push(dayNum)
+          days.push({
+            dt: item.dt,
+            date: d.toLocaleDateString('es-ES', { weekday: 'short' }),
+            temp: item.main.temp,
+            description: item.weather[0].description,
+            icon: item.weather[0].icon,
+          })
+        }
+      })
+      forecast3.value = days.slice(0, 3)
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
 
 // Fondo dinámico según clima
 const backgroundStyle = computed(() => {
@@ -76,13 +129,20 @@ body {
 }
 
 .app {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: background 0.5s ease;
 }
 
+.weather-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Tarjeta principal */
 .weather-card {
   background: rgba(255, 255, 255, 0.2);
   padding: 2rem 3rem;
@@ -105,6 +165,7 @@ body {
   margin-bottom: 0.5rem;
 }
 
+/* Input ciudad */
 .city-input {
   width: 80%;
   padding: 0.5rem;
@@ -123,5 +184,52 @@ body {
 
 .loading {
   font-size: 1rem;
+}
+
+/* Pronóstico 3 días */
+.forecast {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+.forecast-card {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 1rem;
+  border-radius: 1.5rem;
+  backdrop-filter: blur(10px);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+  margin: 0 0.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Hover en forecast cards */
+.forecast-card:hover {
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+/* Animación de entrada */
+.forecast-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.forecast-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+.forecast-enter-active {
+  transition: all 0.5s ease;
 }
 </style>
