@@ -141,7 +141,6 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 1rem 1.5rem;
-  width: 80%;
   max-width: 100vw;
 }
 
@@ -154,7 +153,6 @@ body {
   color: #fff;
   min-width: 250px;
   max-width: 90vw;
-  width: 100%;
   margin-bottom: 2rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease;
