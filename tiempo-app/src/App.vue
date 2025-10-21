@@ -117,8 +117,13 @@ const backgroundStyle = computed(() => {
 </script>
 
 <style>
-body {
+* {
+  box-sizing: border-box;
   margin: 0;
+  padding: 0;
+}
+
+body {
   font-family: system-ui, sans-serif;
 }
 
@@ -128,6 +133,7 @@ body {
   justify-content: center;
   align-items: center;
   transition: background 0.5s ease;
+  overflow-x: hidden;
 }
 
 .weather-container {
@@ -135,8 +141,8 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 1rem 1.5rem;
-  width: 100%;
-  box-sizing: border-box;
+  width: 80%;
+  max-width: 100vw;
 }
 
 .weather-card {
@@ -147,7 +153,7 @@ body {
   text-align: center;
   color: #fff;
   min-width: 250px;
-  max-width: 400px;
+  max-width: 90vw;
   width: 100%;
   margin-bottom: 2rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
@@ -190,7 +196,7 @@ body {
   flex-wrap: wrap;
   gap: 1rem;
   width: 100%;
-  max-width: 900px;
+  max-width: 100%;
 }
 
 .forecast-card {
@@ -205,7 +211,7 @@ body {
   justify-content: center;
   text-align: center;
   flex: 1 1 120px;
-  max-width: 200px;
+  max-width: 90vw;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   transition:
     transform 0.2s ease,
@@ -221,10 +227,12 @@ body {
   opacity: 0;
   transform: translateY(20px);
 }
+
 .forecast-enter-to {
   opacity: 1;
   transform: translateY(0);
 }
+
 .forecast-enter-active {
   transition: all 0.5s ease;
 }
