@@ -1,7 +1,6 @@
 <template>
   <div class="app" :style="backgroundStyle">
     <div class="weather-container">
-      <!-- Tarjeta principal -->
       <div class="weather-card">
         <input
           v-model="city"
@@ -23,7 +22,6 @@
         <div v-else class="loading">Introduce una ciudad y presiona Enter</div>
       </div>
 
-      <!-- Pronóstico de 3 días con transición -->
       <transition-group name="forecast" tag="div" class="forecast" v-if="forecast3.length">
         <div
           class="forecast-card"
@@ -50,10 +48,8 @@ const loading = ref(false)
 const forecast3 = ref([])
 
 const apiKey = import.meta.env.VITE_WEATHER_API_KEY
-
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
 
-// Fetch clima principal
 const getWeather = async () => {
   if (!city.value) return
   loading.value = true
@@ -77,7 +73,6 @@ const getWeather = async () => {
   }
 }
 
-// Fetch pronóstico 3 días
 const getForecast = async (cityName) => {
   try {
     const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(
@@ -110,7 +105,6 @@ const getForecast = async (cityName) => {
   }
 }
 
-// Fondo dinámico según clima
 const backgroundStyle = computed(() => {
   if (!weather.value) return { background: 'linear-gradient(135deg, #89f7fe, #66a6ff)' }
   const main = weather.value.weather[0].main
@@ -140,9 +134,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 1rem 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* Tarjeta principal */
 .weather-card {
   background: rgba(255, 255, 255, 0.2);
   padding: 2rem 3rem;
@@ -150,7 +146,10 @@ body {
   backdrop-filter: blur(15px);
   text-align: center;
   color: #fff;
-  min-width: 280px;
+  min-width: 250px;
+  max-width: 400px;
+  width: 100%;
+  margin-bottom: 2rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease;
 }
@@ -165,7 +164,6 @@ body {
   margin-bottom: 0.5rem;
 }
 
-/* Input ciudad */
 .city-input {
   width: 80%;
   padding: 0.5rem;
@@ -186,11 +184,11 @@ body {
   font-size: 1rem;
 }
 
-/* Pronóstico 3 días */
 .forecast {
   display: flex;
-  justify-content: space-between;
-  margin-top: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
   width: 100%;
   max-width: 900px;
 }
@@ -206,21 +204,19 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  flex: 1;
-  margin: 0 0.5rem;
+  flex: 1 1 120px;
+  max-width: 200px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-/* Hover en forecast cards */
 .forecast-card:hover {
   transform: translateY(-5px) scale(1.03);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
 }
 
-/* Animación de entrada */
 .forecast-enter-from {
   opacity: 0;
   transform: translateY(20px);
@@ -231,5 +227,20 @@ body {
 }
 .forecast-enter-active {
   transition: all 0.5s ease;
+}
+
+@media (max-width: 500px) {
+  .weather-container {
+    padding: 1rem 1rem;
+  }
+
+  .city-input {
+    width: 100%;
+  }
+
+  .forecast-card {
+    margin: 0.5rem 0;
+    max-width: 100%;
+  }
 }
 </style>
