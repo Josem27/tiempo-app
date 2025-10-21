@@ -9,9 +9,14 @@
       />
       <div v-if="loading" class="loading">Cargando clima...</div>
       <div v-else-if="weather">
-        <h1>{{ weather.name }}</h1>
+        <img
+          :src="`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`"
+          alt="icono clima"
+          class="weather-icon"
+        />
+        <h1>{{ weather.name }}, {{ weather.sys.country }}</h1>
         <h2>{{ Math.round(weather.main.temp) }}°C</h2>
-        <p>{{ weather.weather[0].description }}</p>
+        <p>{{ capitalize(weather.weather[0].description) }}</p>
       </div>
       <div v-else class="loading">Introduce una ciudad y presiona Enter</div>
     </div>
@@ -19,7 +24,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 
 const city = ref('')
 const weather = ref(null)
@@ -49,6 +54,9 @@ const getWeather = async () => {
   }
 }
 
+// Función para capitalizar la primera letra de la descripción
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
+
 // Fondo dinámico según clima
 const backgroundStyle = computed(() => {
   if (!weather.value) return { background: 'linear-gradient(135deg, #89f7fe, #66a6ff)' }
@@ -76,13 +84,25 @@ body {
 }
 
 .weather-card {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   padding: 2rem 3rem;
   border-radius: 2rem;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
   text-align: center;
   color: #fff;
   min-width: 280px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.weather-card:hover {
+  transform: translateY(-5px);
+}
+
+.weather-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 0.5rem;
 }
 
 .city-input {
@@ -93,11 +113,12 @@ body {
   margin-bottom: 1rem;
   text-align: center;
   font-size: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .city-input:focus {
   outline: none;
-  box-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
 }
 
 .loading {
